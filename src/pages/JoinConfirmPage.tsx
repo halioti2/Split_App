@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 type TokenRow = { id: string; group_id: string; token: string; expires_at: string; active: boolean }
@@ -11,6 +11,7 @@ export default function JoinConfirmPage() {
   const [groupName, setGroupName] = useState<string>('')
   const [groupId, setGroupId] = useState<string>('')
   const navigate = useNavigate()
+  const loc = useLocation()
 
   useEffect(() => {
     void (async () => {
@@ -18,8 +19,9 @@ export default function JoinConfirmPage() {
         // Require login to proceed
         const { data: session } = await supabase.auth.getSession()
         if (!session.session) {
-          setError('Please sign in to join this group.')
-          setLoading(false)
+          // Redirect to auth with return path to this join link
+          const redirect = encodeURIComponent(loc.pathname + loc.search)
+          navigate(`/?redirect=${redirect}`, { replace: true })
           return
         }
         // Load token
@@ -42,7 +44,7 @@ export default function JoinConfirmPage() {
         setLoading(false)
       }
     })()
-  }, [token])
+  }, [token, navigate, loc.pathname, loc.search])
 
   async function confirmJoin() {
     setError(null)

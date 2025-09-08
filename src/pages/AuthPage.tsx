@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 export default function AuthPage() {
   const [email, setEmail] = useState('')
@@ -8,16 +8,19 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const navigate = useNavigate()
+  const loc = useLocation()
+  const search = new URLSearchParams(loc.search)
+  const returnTo = search.get('redirect') || ''
 
   useEffect(() => {
     let mounted = true
     supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return
-      if (data.session) navigate('/groups')
+      if (data.session) navigate(returnTo && returnTo.startsWith('/') ? returnTo : '/groups', { replace: true })
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       if (!mounted) return
-      if (session) navigate('/groups')
+      if (session) navigate(returnTo && returnTo.startsWith('/') ? returnTo : '/groups', { replace: true })
     })
     // If arriving from a magic link, the URL may contain tokens; show brief pending state
     if (location.hash.includes('access_token') || location.href.includes('type=magiclink') || location.href.includes('token_hash=')) {
@@ -31,7 +34,7 @@ export default function AuthPage() {
   const send = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    const redirectTo = window.location.origin
+    const redirectTo = window.location.origin + (returnTo && returnTo.startsWith('/') ? returnTo : '')
     const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } })
     if (error) { setError(error.message); return }
     setSent(true)
