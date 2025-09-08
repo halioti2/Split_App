@@ -19,6 +19,8 @@ export default function JoinConfirmPage() {
         // Require login to proceed
         const { data: session } = await supabase.auth.getSession()
         if (!session.session) {
+          // Store intended return path as a fallback for auth
+          try { sessionStorage.setItem('postLoginRedirect', loc.pathname + loc.search) } catch {}
           // Redirect to auth with return path to this join link
           const redirect = encodeURIComponent(loc.pathname + loc.search)
           navigate(`/?redirect=${redirect}`, { replace: true })
@@ -26,18 +28,19 @@ export default function JoinConfirmPage() {
         }
         // Load token
         const now = new Date().toISOString()
+        // Read the token row only; do not join to groups (blocked by RLS for non-members)
         const { data, error } = await supabase
           .from('group_join_tokens')
-          .select('*, groups(name)')
+          .select('id, group_id, token, expires_at, active')
           .eq('token', token)
           .gt('expires_at', now)
           .eq('active', true)
           .maybeSingle()
         if (error) throw error
         if (!data) { setError('This invite has expired or is invalid.'); setLoading(false); return }
-        const row = data as any as TokenRow & { groups: { name: string } }
+        const row = data as any as TokenRow
         setGroupId(row.group_id)
-        setGroupName((row as any).groups?.name ?? 'Group')
+        setGroupName('Group')
       } catch (e: any) {
         setError(e?.message ?? 'Failed to load invite.')
       } finally {
@@ -50,11 +53,8 @@ export default function JoinConfirmPage() {
     setError(null)
     try {
       // Cap: 20 users
-      const { data: countRows } = await supabase.from('group_users').select('id', { count: 'exact', head: true }).eq('group_id', groupId)
-      const count = (countRows as any)?.length ?? 0 // head:true returns no rows; count not directly accessible in typed client
-      // Fallback: fetch ids to count
       const { data: rows } = await supabase.from('group_users').select('id').eq('group_id', groupId)
-      const size = rows?.length ?? count
+      const size = rows?.length ?? 0
       if (size >= 20) { setError('This group is full (20 members).'); return }
 
       const { data: user } = await supabase.auth.getUser()

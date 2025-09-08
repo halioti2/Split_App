@@ -10,17 +10,26 @@ export default function AuthPage() {
   const navigate = useNavigate()
   const loc = useLocation()
   const search = new URLSearchParams(loc.search)
-  const returnTo = search.get('redirect') || ''
+  const stored = (() => { try { return sessionStorage.getItem('postLoginRedirect') || '' } catch { return '' } })()
+  const returnTo = search.get('redirect') || stored || ''
 
   useEffect(() => {
     let mounted = true
     supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return
-      if (data.session) navigate(returnTo && returnTo.startsWith('/') ? returnTo : '/groups', { replace: true })
+      if (data.session) {
+        const target = returnTo && returnTo.startsWith('/') ? returnTo : '/groups'
+        try { sessionStorage.removeItem('postLoginRedirect') } catch {}
+        navigate(target, { replace: true })
+      }
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       if (!mounted) return
-      if (session) navigate(returnTo && returnTo.startsWith('/') ? returnTo : '/groups', { replace: true })
+      if (session) {
+        const target = returnTo && returnTo.startsWith('/') ? returnTo : '/groups'
+        try { sessionStorage.removeItem('postLoginRedirect') } catch {}
+        navigate(target, { replace: true })
+      }
     })
     // If arriving from a magic link, the URL may contain tokens; show brief pending state
     if (location.hash.includes('access_token') || location.href.includes('type=magiclink') || location.href.includes('token_hash=')) {
