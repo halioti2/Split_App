@@ -31,7 +31,8 @@ export default function AuthPage() {
   const send = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    const { error } = await supabase.auth.signInWithOtp({ email })
+    const redirectTo = window.location.origin
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } })
     if (error) { setError(error.message); return }
     setSent(true)
   }
