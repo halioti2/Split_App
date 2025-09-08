@@ -2,6 +2,20 @@
   command = "npm run build"
   publish = "dist"
 
+  [build.environment]
+    # Frontend apps must expose public keys like Supabase anon URL/key.
+    # Tell Netlify's secrets scanner to omit these public variables.
+    SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY"
+
+[context.production.environment]
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY"
+
+[context.deploy-preview.environment]
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY"
+
+[context.branch-deploy.environment]
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY"
+
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
@@ -11,4 +25,3 @@
   from = "/*"
   to = "/index.html"
   status = 200
-

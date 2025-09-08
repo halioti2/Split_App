@@ -33,4 +33,4 @@ Algorithm tests with Vitest: `npm test`.
 ## Notes
 - This scaffold expects the Supabase tables and RLS policies from `SETUP_TASKS.md` to be present.
 - QR flow uses short-lived tokens from `payment_requests`. In MVP, tokens require login and group access; one-time use can be added later.
-
+- Netlify secrets scanning: Frontend apps must ship public env vars (VITE_*). Supabase anon key and URL are safe to expose with RLS. We configure `SECRETS_SCAN_OMIT_KEYS` in `netlify.toml` so Netlify does not block the build.
