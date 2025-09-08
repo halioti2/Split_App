@@ -52,6 +52,12 @@
 - Security: random high‑entropy tokens, short expiration. One‑time use is ideal but not critical for MVP since no money moves in‑app; access still requires login + group membership via RLS.
 - Libraries: lightweight QR code generator (e.g., `qrcode` or `qrcode.react`).
 
+## Join via QR (New)
+- Table: `group_join_tokens(id, group_id, token, created_by, expires_at, max_joins, joins_count, active)`
+- Generation: any group user can create a token; default expiry 2 minutes; multi‑use within window; optional max_joins null (unlimited until expiry).
+- Route: `/join/:token` shows a confirm screen after login. On confirm, add user to `group_users` (role `member`) if group has < 20 users and token is valid; increment `joins_count`.
+- Limits: at most one active token per member per group (client‑enforced), optional cap of 3 active tokens per group (client‑enforced). Token can be revoked by creator (set `active=false`).
+
 ## Environment
 - Netlify environment variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 - Local `.env`: same variables for dev.

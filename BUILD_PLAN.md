@@ -125,6 +125,7 @@ Computed:
 Optional (time‑permitting)
 - [ ] QR code for payment request link (deep link or app route), to help friends open the right screen after login on mobile.
   - [ ] Checkpoint: scan on iPhone/Android → resolves token → shows request; expiry works.
+- [ ] Join via QR: client-side limits (only 1 active token per member, max 3 active per group); show revoke UI.
 
 ## Risks & Mitigations
 - Timebox: strict MVP; push custom splits and invites to v1.1.

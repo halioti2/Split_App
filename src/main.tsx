@@ -8,6 +8,7 @@ import GroupsPage from './pages/GroupsPage'
 import GroupDashboard from './pages/GroupDashboard'
 import PayRequestPage from './pages/PayRequestPage'
 import RequireAuth from './shared/RequireAuth'
+import JoinConfirmPage from './pages/JoinConfirmPage'
 
 const router = createBrowserRouter([
   { path: '/', element: <App />, children: [
@@ -15,6 +16,7 @@ const router = createBrowserRouter([
     { path: 'groups', element: <RequireAuth><GroupsPage /></RequireAuth> },
     { path: 'groups/:groupId/*', element: <RequireAuth><GroupDashboard /></RequireAuth> },
     { path: 'pay/:token', element: <PayRequestPage /> },
+    { path: 'join/:token', element: <JoinConfirmPage /> },
   ]}
 ])
 

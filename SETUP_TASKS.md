@@ -208,6 +208,19 @@ create table if not exists payment_requests (
   used_at timestamptz
 );
 
+-- Join tokens for QR-based group join (multi-use within short window)
+create table if not exists group_join_tokens (
+  id uuid primary key default gen_random_uuid(),
+  group_id uuid not null references groups(id) on delete cascade,
+  token text not null unique,
+  created_by uuid not null,
+  expires_at timestamptz not null,
+  max_joins integer,
+  joins_count integer not null default 0,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
 -- RLS
 alter table groups enable row level security;
 alter table group_users enable row level security;
@@ -215,6 +228,7 @@ alter table group_members enable row level security;
 alter table expenses enable row level security;
 alter table settlements enable row level security;
 alter table payment_requests enable row level security;
+alter table group_join_tokens enable row level security;
 
 -- Policies
 -- Groups: owners can do everything, members can read
@@ -273,4 +287,19 @@ create policy payment_requests_rw on payment_requests
   )) with check (exists (
     select 1 from group_users gu where gu.group_id = payment_requests.group_id and gu.user_id = auth.uid()
   ));
+
+-- Join tokens: group collaborators can read; create within their groups; updates limited
+drop policy if exists group_join_tokens_rw on group_join_tokens;
+create policy group_join_tokens_rw on group_join_tokens
+  for all using (exists (
+    select 1 from group_users gu where gu.group_id = group_join_tokens.group_id and gu.user_id = auth.uid()
+  )) with check (exists (
+    select 1 from group_users gu where gu.group_id = group_join_tokens.group_id and gu.user_id = auth.uid()
+  ));
+
+-- Optional: ensure member display names are unique per group (prevents duplicates when auto-creating labels)
+create unique index if not exists uniq_group_members_name on group_members(group_id, display_name);
+
+-- Optional helper: limit group size to 20 (enforced in client minimally);
+-- to enforce in DB, you could add a constraint via trigger (out of MVP scope).
 ```
