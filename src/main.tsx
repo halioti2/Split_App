@@ -7,12 +7,13 @@ import AuthPage from './pages/AuthPage'
 import GroupsPage from './pages/GroupsPage'
 import GroupDashboard from './pages/GroupDashboard'
 import PayRequestPage from './pages/PayRequestPage'
+import RequireAuth from './shared/RequireAuth'
 
 const router = createBrowserRouter([
   { path: '/', element: <App />, children: [
     { index: true, element: <AuthPage /> },
-    { path: 'groups', element: <GroupsPage /> },
-    { path: 'groups/:groupId/*', element: <GroupDashboard /> },
+    { path: 'groups', element: <RequireAuth><GroupsPage /></RequireAuth> },
+    { path: 'groups/:groupId/*', element: <RequireAuth><GroupDashboard /></RequireAuth> },
     { path: 'pay/:token', element: <PayRequestPage /> },
   ]}
 ])
@@ -22,4 +23,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <RouterProvider router={router} />
   </React.StrictMode>
 )
-
